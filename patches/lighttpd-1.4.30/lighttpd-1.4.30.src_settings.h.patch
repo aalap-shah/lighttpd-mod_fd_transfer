@@ -1,0 +1,20 @@
+*** lighttpd-1.4.30.original/src/settings.h	2011-08-20 06:07:05.000000000 -0700
+--- lighttpd-1.4.30.new/src/settings.h	2012-04-11 10:39:54.897215692 -0700
+***************
+*** 40,46 ****
+  		HANDLER_COMEBACK,
+  		HANDLER_WAIT_FOR_EVENT,
+  		HANDLER_ERROR,
+! 		HANDLER_WAIT_FOR_FD
+  } handler_t;
+  
+  #define HTTP_LINGER_TIMEOUT 5
+--- 40,47 ----
+  		HANDLER_COMEBACK,
+  		HANDLER_WAIT_FOR_EVENT,
+  		HANDLER_ERROR,
+! 		HANDLER_WAIT_FOR_FD,
+! 		HANDLER_FORWARD
+  } handler_t;
+  
+  #define HTTP_LINGER_TIMEOUT 5

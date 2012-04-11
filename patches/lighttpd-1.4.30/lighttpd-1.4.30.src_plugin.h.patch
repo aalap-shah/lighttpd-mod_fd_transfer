@@ -1,0 +1,22 @@
+*** lighttpd-1.4.30.original/src/plugin.h	2010-02-01 15:28:20.000000000 -0800
+--- lighttpd-1.4.30.new/src/plugin.h	2012-04-11 10:39:54.925915203 -0700
+***************
+*** 38,43 ****
+--- 38,44 ----
+  	handler_t (* handle_trigger)         (server *srv, void *p_d);                     /* once a second */
+  	handler_t (* handle_sighup)          (server *srv, void *p_d);                     /* at a signup */
+  
++ 	handler_t (* handle_request_raw)     (server *srv, connection *con, void *p_d);    /* Immedialty after the connection is established and headers are parsed*/
+  	handler_t (* handle_uri_raw)         (server *srv, connection *con, void *p_d);    /* after uri_raw is set */
+  	handler_t (* handle_uri_clean)       (server *srv, connection *con, void *p_d);    /* after uri is set */
+  	handler_t (* handle_docroot)         (server *srv, connection *con, void *p_d);    /* getting the document-root */
+***************
+*** 64,69 ****
+--- 65,71 ----
+  int plugins_load(server *srv);
+  void plugins_free(server *srv);
+  
++ handler_t plugins_call_handle_request_raw(server *srv, connection *con);
+  handler_t plugins_call_handle_uri_raw(server *srv, connection *con);
+  handler_t plugins_call_handle_uri_clean(server *srv, connection *con);
+  handler_t plugins_call_handle_subrequest_start(server *srv, connection *con);

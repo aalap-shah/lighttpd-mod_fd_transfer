@@ -1,0 +1,78 @@
+*** lighttpd-1.4.30.original/src/connections.c	2011-11-30 09:42:45.000000000 -0800
+--- lighttpd-1.4.30.new/src/connections.c	2012-04-11 11:08:38.853171177 -0700
+***************
+*** 1427,1442 ****
+  			buffer_reset(con->uri.query);
+  			buffer_reset(con->request.orig_uri);
+  
+! 			if (http_request_parse(srv, con)) {
+! 				/* we have to read some data from the POST request */
+  
+- 				connection_set_state(srv, con, CON_STATE_READ_POST);
+  
+! 				break;
+  			}
+  
+- 			connection_set_state(srv, con, CON_STATE_HANDLE_REQUEST);
+- 
+  			break;
+  		case CON_STATE_HANDLE_REQUEST:
+  			/*
+--- 1427,1458 ----
+  			buffer_reset(con->uri.query);
+  			buffer_reset(con->request.orig_uri);
+  
+! 			r = http_request_parse(srv, con);
+  
+  
+! 			switch (plugins_call_handle_request_raw(srv, con)) {
+! 				case HANDLER_GO_ON:
+! 				case HANDLER_FINISHED:
+! 				case HANDLER_WAIT_FOR_FD:
+! 				case HANDLER_COMEBACK:
+! 				case HANDLER_WAIT_FOR_EVENT:
+! 				case HANDLER_ERROR:
+! 					if(r) {
+! 						/* we have to read some data from the POST request */
+! 						connection_set_state(srv, con, CON_STATE_READ_POST);
+! 					} else {
+! 						connection_set_state(srv, con, CON_STATE_HANDLE_REQUEST);
+! 					}
+! 					break;
+! 				case HANDLER_FORWARD:
+! 					connection_set_state(srv, con, CON_STATE_FORWARD);
+! 					break;
+! 				default:
+! 					connection_set_state(srv, con, CON_STATE_READ_POST);
+! 					log_error_write(srv, __FILE__, __LINE__, "sdd", "unknown ret-value: ", con->fd, r);
+! 					break;
+  			}
+  
+  			break;
+  		case CON_STATE_HANDLE_REQUEST:
+  			/*
+***************
+*** 1515,1520 ****
+--- 1531,1540 ----
+  				/* something went wrong */
+  				connection_set_state(srv, con, CON_STATE_ERROR);
+  				break;
++ 			case HANDLER_FORWARD:
++ 				/* We do not have to process this request any more as it is forwarded */
++ 				connection_set_state(srv, con, CON_STATE_FORWARD);
++ 				break;
+  			default:
+  				log_error_write(srv, __FILE__, __LINE__, "sdd", "unknown ret-value: ", con->fd, r);
+  				break;
+***************
+*** 1614,1619 ****
+--- 1634,1642 ----
+  			con->request_count = 0;
+  
+  			break;
++ 		case CON_STATE_FORWARD:
++ 			connection_close(srv, con);
++ 			break;
+  		case CON_STATE_CLOSE:
+  			if (srv->srvconf.log_state_handling) {
+  				log_error_write(srv, __FILE__, __LINE__, "sds",

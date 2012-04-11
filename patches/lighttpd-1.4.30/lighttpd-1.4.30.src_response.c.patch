@@ -1,0 +1,12 @@
+*** lighttpd-1.4.30.original/src/response.c	2010-08-17 02:04:38.000000000 -0700
+--- lighttpd-1.4.30.new/src/response.c	2012-04-11 10:39:54.897215692 -0700
+***************
+*** 379,384 ****
+--- 379,385 ----
+  		case HANDLER_COMEBACK:
+  		case HANDLER_WAIT_FOR_EVENT:
+  		case HANDLER_ERROR:
++ 		case HANDLER_FORWARD:
+  			return r;
+  		default:
+  			log_error_write(srv, __FILE__, __LINE__, "");

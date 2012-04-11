@@ -1,0 +1,20 @@
+*** lighttpd-1.4.30.original/src/base.h	2011-11-30 11:43:35.000000000 -0800
+--- lighttpd-1.4.30.new/src/base.h	2012-04-11 10:39:54.897215692 -0700
+***************
+*** 336,342 ****
+  	CON_STATE_WRITE,
+  	CON_STATE_RESPONSE_END,
+  	CON_STATE_ERROR,
+! 	CON_STATE_CLOSE
+  } connection_state_t;
+  
+  typedef enum { COND_RESULT_UNSET, COND_RESULT_FALSE, COND_RESULT_TRUE } cond_result_t;
+--- 336,343 ----
+  	CON_STATE_WRITE,
+  	CON_STATE_RESPONSE_END,
+  	CON_STATE_ERROR,
+! 	CON_STATE_CLOSE,
+! 	CON_STATE_FORWARD
+  } connection_state_t;
+  
+  typedef enum { COND_RESULT_UNSET, COND_RESULT_FALSE, COND_RESULT_TRUE } cond_result_t;

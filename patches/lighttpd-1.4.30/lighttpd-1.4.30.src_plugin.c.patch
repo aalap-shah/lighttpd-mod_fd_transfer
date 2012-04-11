@@ -1,0 +1,52 @@
+*** lighttpd-1.4.30.original/src/plugin.c	2010-08-17 02:04:38.000000000 -0700
+--- lighttpd-1.4.30.new/src/plugin.c	2012-04-11 10:39:54.925915203 -0700
+***************
+*** 29,34 ****
+--- 29,35 ----
+  
+  typedef enum {
+  	PLUGIN_FUNC_UNSET,
++ 		PLUGIN_FUNC_HANDLE_REQUEST_RAW,
+  		PLUGIN_FUNC_HANDLE_URI_CLEAN,
+  		PLUGIN_FUNC_HANDLE_URI_RAW,
+  		PLUGIN_FUNC_HANDLE_REQUEST_DONE,
+***************
+*** 247,252 ****
+--- 248,254 ----
+  			case HANDLER_WAIT_FOR_EVENT:\
+  			case HANDLER_WAIT_FOR_FD:\
+  			case HANDLER_ERROR:\
++ 			case HANDLER_FORWARD:\
+  				return r;\
+  			default:\
+  				log_error_write(srv, __FILE__, __LINE__, "sbs", #x, p->name, "unknown state");\
+***************
+*** 264,269 ****
+--- 266,272 ----
+   * - void *p_d (plugin_data *)
+   */
+  
++ PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_REQUEST_RAW, handle_request_raw)
+  PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_URI_CLEAN, handle_uri_clean)
+  PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_URI_RAW, handle_uri_raw)
+  PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_REQUEST_DONE, handle_request_done)
+***************
+*** 295,300 ****
+--- 298,304 ----
+  			case HANDLER_WAIT_FOR_EVENT:\
+  			case HANDLER_WAIT_FOR_FD:\
+  			case HANDLER_ERROR:\
++ 			case HANDLER_FORWARD:\
+  				return r;\
+  			default:\
+  				log_error_write(srv, __FILE__, __LINE__, "sbsd", #x, p->name, "unknown state:", r);\
+***************
+*** 391,396 ****
+--- 395,401 ----
+  	}
+  
+  
++ 		PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_REQUEST_RAW, handle_request_raw);
+  		PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_URI_CLEAN, handle_uri_clean);
+  		PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_URI_RAW, handle_uri_raw);
+  		PLUGIN_TO_SLOT(PLUGIN_FUNC_HANDLE_REQUEST_DONE, handle_request_done);

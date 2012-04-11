@@ -1,0 +1,15 @@
+*** lighttpd-1.4.30.original/src/Makefile.am	2011-07-30 02:13:01.000000000 -0700
+--- lighttpd-1.4.30.new/src/Makefile.am	2012-04-11 10:39:54.925915203 -0700
+***************
+*** 265,270 ****
+--- 265,274 ----
+  mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+  mod_accesslog_la_LIBADD = $(common_libadd)
+  
++ lib_LTLIBRARIES += mod_fd_transfer.la
++ mod_fd_transfer_la_SOURCES = mod_fd_transfer.c
++ mod_fd_transfer_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
++ mod_fd_transfer_la_LIBADD = $(common_libadd)
+  
+  hdr = server.h buffer.h network.h log.h keyvalue.h \
+        response.h request.h fastcgi.h chunk.h \
