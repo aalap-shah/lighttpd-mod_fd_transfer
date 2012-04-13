@@ -1,0 +1,33 @@
+// $Id$
+
+- What is this?
+  mod_fd_transfer.c provides a module for websocket and parallel request handling using Linux's open file descriptor transfer
+  It is a plugin to lighttpd HTTP server ver 1.4.30( http://www.lighttpd.net/ )
+
+- How does mod_fd_transfer work?
+  Please see the 2 documents for their architecture and internals.
+
+  https://github.com/aalap-shah/lighttpd-mod_fd_transfer/blob/master/ModFDTransferInternals.doc
+  https://github.com/aalap-shah/lighttpd-mod_fd_transfer/blob/master/LibStratusInternals.doc
+
+- How can I use this?
+  First, please do like this.
+
+  $ git clone git://github.com/aalap-shah/lighttpd-mod_fd_transfer.git
+
+  and follow the instructions in INSTALL.
+
+  for QUICK START, plz read Wiki.
+
+  https://github.com/aalap-shah/lighttpd-mod_fd_transfer/wiki
+
+- LICENCE
+  see COPYING.
+  and see lighttpd LICENCE.
+
+- great thanks to
+  Shakti Ashirvad(shakti.ashirvad@gmail.com)
+  Manish Dwivedi(mdwivedi@gmail.com)
+  and lighty developpers!
+
+// EOF
