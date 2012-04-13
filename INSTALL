@@ -1,0 +1,66 @@
+// $Id$
+
+- Install lighty with mod_fd_transfer
+
+1.Check your environment
+  - dependent tools and libs[mandatory]
+    1.autotools
+    exmaple for ubuntu.
+    $ sudo apt-get install automake
+    $ sudo apt-get install libtool
+
+    And I recommend you to install version 1.9 or later.
+
+    2.libpcre-dev ( http://www.pcre.org/ )
+    $ sudo apt-get install libpcre3 libpcre3-dev
+
+    3.bzip2-dev
+    $ sudo apt-get install libbz2-dev
+
+    4.glib-2.0
+    $ sudo apt-get install libglib2.0-0 libglib2.0-dev
+
+    5.openssl
+    $ sudo apt-get install openssl libssl-dev
+
+2.Get the lighttpd-1.4.30 source from
+  http://www.lighttpd.net/download/
+
+  $ tar -xzvf lighttpd-1.4.30.tar.gz
+
+3.Patch the lighttpd with the mod_fd_transfer patches provided in 
+  patches folder inside the code 
+  which is also at 
+  https://github.com/aalap-shah/lighttpd-mod_fd_transfer/tree/master/patches
+
+  Patch Commands : 
+  
+5.Build lighttpd with mod_fd_transfer
+
+  $ cd /path/to/lighttpd_top_srcdir
+  $ ./autogen.sh
+  $ ./configure [--without-bzip2]
+  $ make
+  $ sudo make install
+
+6.Add setting for mod_fd_transfer into lighttpd.conf
+
+  6-1. add mod_fd_transfer module into server.modules section of modules.conf.
+       the configuration is added by the patch file itself you just need to 
+       uncomment the following line from modules.conf
+       #include "conf.d/fdtransfer.conf"
+
+  6-2. Uncomment the following lines from fdtransfer.conf file
+       #  fd_transfer.services  = ( "/" => 
+       #                                  ( 
+       #                                    "socket" => "/tmp/fdt.socket", 
+       #                                    "bin-path" => "/usr/local/bin/static-file-fd-server"
+       #                                  )
+       #                          )
+
+7. Install libstratus and its test servers
+   Refer to INSTALL file of stratus for the steps.
+   
+8. Starting lighttpd.
+   lighttpd -D -f conf/file/path
+// EOF
