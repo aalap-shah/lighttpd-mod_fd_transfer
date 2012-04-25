@@ -265,6 +265,77 @@ static gboolean stratus_connection_gio_watch_ready_to_write_cb (GIOChannel *sour
 	return FALSE;
 }
 
+void stratus_connection_write_websocket_frame(StratusServer *server, StratusServerConnection *connection, gchar *data, gsize size)
+{
+	/** NOTE: create web-socket frame logic based on the websocket protcol at hand.*/
+	guchar *buffer_ptr = NULL;
+
+	if(connection->request->header.ws_header->handshake_protocol_id == 6455)
+	{
+		if(size <= 125)
+		{
+			connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + 2);
+			buffer_ptr = connection->response->buffer + connection->response->size;
+			guchar frame[2] = {0};
+			frame[0] = 0x81;
+			frame[1] = 0xFF & size;
+			STRATUS_LOG_V("1 Connneciotn pointer %X\n", frame);
+			g_memmove(buffer_ptr, frame, 2);
+			buffer_ptr = buffer_ptr + 2;
+			g_memmove(buffer_ptr, data, size);
+			buffer_ptr = buffer_ptr + size;
+			connection->response->size = connection->response->size + size + 2;
+		}
+		else if(size <= 0xFFFF)
+		{
+			connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + 4);
+			buffer_ptr = connection->response->buffer + connection->response->size;
+			guchar frame[4] = {0};
+			frame[0] = 0x81;
+			frame[1] = 0x7E;
+			frame[2] = (size >> 8) & 0xFF;
+			frame[3] = (size & 0xFF);
+			STRATUS_LOG_V("1 Connneciotn pointer %X\n", frame);
+			g_memmove(buffer_ptr, frame, 4);
+			buffer_ptr = buffer_ptr + 4;
+			g_memmove(buffer_ptr, data, size);
+			buffer_ptr = buffer_ptr + size;
+			connection->response->size = connection->response->size + size + 4;
+		}
+		else
+		{
+			/** NOTE: Currently we just support sizes less than 2^32 */
+			connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + 10);
+			buffer_ptr = connection->response->buffer + connection->response->size;
+			guchar frame[10] = {0};
+			frame[0] = 0x81;
+			frame[1] = 0x7F;
+			frame[6] = (size >> 24) & 0xFF;
+			frame[7] = (size >> 16) & 0xFF;
+			frame[8] = (size >> 8) & 0xFF;
+			frame[9] = size & 0xFF;
+			STRATUS_LOG_V("1 Connneciotn pointer %X\n", frame);
+			g_memmove(buffer_ptr, frame, 10);
+			buffer_ptr = buffer_ptr + 10;
+			g_memmove(buffer_ptr, data, size);
+			buffer_ptr = buffer_ptr + size;
+			connection->response->size = connection->response->size + size + 10;
+		}
+	}
+	else if(connection->request->header.ws_header->handshake_protocol_id == 75 || connection->request->header.ws_header->handshake_protocol_id == 76)
+	{
+		connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + 2);
+		buffer_ptr = connection->response->buffer + connection->response->size;
+		buffer_ptr = 0x00;
+		/* copying the actual data */
+		g_memmove(++buffer_ptr, data, size);
+		buffer_ptr = buffer_ptr + size;
+		buffer_ptr = (guchar)0xFF;
+		buffer_ptr++;
+		connection->response->size = connection->response->size + size + 2;
+	}
+}
+
 gint stratus_connection_write (StratusServer *server, gint connection_id, gchar *data, gsize size)
 {
 	STRATUS_LOG("{");
@@ -285,43 +356,49 @@ gint stratus_connection_write (StratusServer *server, gint connection_id, gchar 
 		return 0;
 	}
 
-	if(connection->headers_sent == FALSE)
+	if(connection->protocol == CONN_PROTO_WS)
 	{
-		stratus_connection_write_headers (server, connection_id, 200, NULL);
+		stratus_connection_write_websocket_frame(server, connection, data, size);
 	}
-
-	STRATUS_LOG_V("1 Connneciotn pointer %p\n", connection);
-
-	if(connection->chunk_transfer)
+	else if(connection->protocol == CONN_PROTO_HTTP)
 	{
-		chunk_size = g_strdup_printf("%X\r\n", size);
-		/** If it is transfer-encoding chunk then we need chunk size and also \r\n at the end of the chunk hence we need strlen(chunk_size) and +2 */
-		chunk_size_size = strlen(chunk_size);
-		connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + chunk_size_size + 2);
-		buffer_ptr = connection->response->buffer + connection->response->size;
-		/* copying the chunksize string*/
-		g_memmove(buffer_ptr, chunk_size, chunk_size_size);
-		buffer_ptr = buffer_ptr + chunk_size_size;
-		/* copying the actual data */
-		g_memmove(buffer_ptr, data, size);
-		buffer_ptr = buffer_ptr + size;
-		/* copying the trailing \r\n for chunked encoding*/
-		g_memmove(buffer_ptr, "\r\n", 2);
-		buffer_ptr = buffer_ptr + 2;
-		g_free(chunk_size);
-		connection->response->size = connection->response->size + size + chunk_size_size + 2;
+		if(connection->headers_sent == FALSE)
+		{
+			stratus_connection_write_headers (server, connection_id, 200, NULL);
+		}
+	
+		STRATUS_LOG_V("1 Connneciotn pointer %p\n", connection);
+	
+		if(connection->chunk_transfer)
+		{
+			chunk_size = g_strdup_printf("%X\r\n", size);
+			/** If it is transfer-encoding chunk then we need chunk size and also \r\n at the end of the chunk hence we need strlen(chunk_size) and +2 */
+			chunk_size_size = strlen(chunk_size);
+			connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size + chunk_size_size + 2);
+			buffer_ptr = connection->response->buffer + connection->response->size;
+			/* copying the chunksize string*/
+			g_memmove(buffer_ptr, chunk_size, chunk_size_size);
+			buffer_ptr = buffer_ptr + chunk_size_size;
+			/* copying the actual data */
+			g_memmove(buffer_ptr, data, size);
+			buffer_ptr = buffer_ptr + size;
+			/* copying the trailing \r\n for chunked encoding*/
+			g_memmove(buffer_ptr, "\r\n", 2);
+			buffer_ptr = buffer_ptr + 2;
+			g_free(chunk_size);
+			connection->response->size = connection->response->size + size + chunk_size_size + 2;
+		}
+		else
+		{ //Content -length transfer
+			connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size);
+			buffer_ptr = connection->response->buffer + connection->response->size;
+			/* copying the actual data */
+			g_memmove(buffer_ptr, data, size);
+			buffer_ptr = buffer_ptr + size;
+	
+			connection->response->size = connection->response->size + size;
+		}
 	}
-	else
-	{ //Content -length transfer
-		connection->response->buffer = g_realloc(connection->response->buffer, connection->response->size + size);
-		buffer_ptr = connection->response->buffer + connection->response->size;
-		/* copying the actual data */
-		g_memmove(buffer_ptr, data, size);
-		buffer_ptr = buffer_ptr + size;
-
-		connection->response->size = connection->response->size + size;
-	}
-
 	connection->write_watch_id = g_io_add_watch(connection->connection_gio, G_IO_OUT, stratus_connection_gio_watch_ready_to_write_cb, server);
 
 	STRATUS_LOG("}");

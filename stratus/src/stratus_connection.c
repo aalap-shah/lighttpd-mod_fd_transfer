@@ -136,6 +136,8 @@ gboolean stratus_connection_gio_watch_cb(GIOChannel *source, GIOCondition condit
 			/** Normal condition.. Call the handler callback.*/
 			if(connection->handler.callback && connection->protocol == CONN_PROTO_WS && connection->state == CONN_STATE_ESTABLISHED)
 			{
+				if(connection->request->header.ws_header->handshake_protocol_id == 6455)
+					stratus_ws_parse_frame(connection->body);
 				(connection->handler.callback)(connection->conn_id, connection->state, connection->request, connection->body, connection->handler.userdata);
 				g_free(connection->body->buffer);
 				connection->body->size = 0;

@@ -148,7 +148,7 @@ void stratus_parse_request_header(StratusServer *server, StratusServerConnection
 						if(i == 1)
 						{
 							/** indicates the first header hence switch the protocol to WS*/
-							if(g_strcasecmp(connection->request->upgrade, "WebSocket") == 0)
+							if(g_ascii_strcasecmp(connection->request->upgrade, "WebSocket") == 0)
 							{
 								connection->protocol = CONN_PROTO_WS;
 							}
@@ -170,6 +170,8 @@ void stratus_parse_request_header(StratusServer *server, StratusServerConnection
 									key_id = TOKEN_KEY1;
 								else if(g_strcmp0(values[0],"Sec-WebSocket-Key2") == 0)
 									key_id = TOKEN_KEY2;
+								else if(g_strcmp0(values[0],"Sec-WebSocket-Key") == 0)
+									key_id = TOKEN_KEY;
 								else if((g_strcmp0(values[0],"Sec-WebSocket-Protocol") == 0) || (g_strcmp0(values[0],"WebSocket-Protocol") == 0))
 									key_id = TOKEN_PROTOCOL;
 								else if(g_strcmp0(values[0],"Sec-WebSocket-Draft") == 0)
@@ -218,8 +220,14 @@ void stratus_parse_request_header(StratusServer *server, StratusServerConnection
 			/** Check if it is websocket then assign the websocket protocol*/
 			if(connection->protocol == CONN_PROTO_WS)
 			{
+				/** Check if the "Sec-WebSocket-Key" part has come then I can decide that its a protocol version RFC 6455*/
+				if(connection->request->header.ws_header->tokens[TOKEN_KEY].buffer)
+				{
+					connection->request->header.ws_header->handshake_protocol_id = 6455;
+					connection->state = CONN_STATE_HTTP_HEADERS;
+				}
 				/** Check if the "Sec" part has come then I can decide that its a protocol version 76, and then only I should go ahead and try to decode the challenege otherwise just set the protocol version 75 and go ahead*/
-				if(connection->request->header.ws_header->tokens[TOKEN_KEY1].buffer && connection->request->header.ws_header->tokens[TOKEN_KEY2].buffer)
+				else if(connection->request->header.ws_header->tokens[TOKEN_KEY1].buffer && connection->request->header.ws_header->tokens[TOKEN_KEY2].buffer)
 				{
 					/** If All of the above keys are present then it would mean that protocol 76 could be present so check for challenege*/
 					if(msg[1] && ((connection->data->size - strlen(msg[0]) - 4) == 8))

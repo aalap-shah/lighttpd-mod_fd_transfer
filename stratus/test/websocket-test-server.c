@@ -26,7 +26,7 @@ gboolean dumb_increment_handler(gpointer data)
 	gint *conn_id = (gint*)data;
 	gchar *temp = g_strdup_printf("%d",  ++counter);
 	gchar *temp1 = g_strdup_printf("%c%s%c", 0x00, temp, 0xff);
-	if(stratus_connection_write(server , *conn_id, temp1, strlen(temp) + 2) <= 2)
+	if(stratus_connection_write(server , *conn_id, temp, strlen(temp)) < strlen(temp))
 	{
 		printf("connection closed ...\n");
 		g_free(temp);

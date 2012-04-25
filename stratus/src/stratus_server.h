@@ -31,6 +31,7 @@
 #include <gio/gio.h>
 #include <glib/gprintf.h>
 #include <openssl/md5.h>
+#include <openssl/sha.h>
 
 #include "stratus.h"
 
